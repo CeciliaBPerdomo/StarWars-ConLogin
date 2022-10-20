@@ -1,8 +1,8 @@
 """empty message
 
-Revision ID: f3fa5135e2d8
+Revision ID: 9cf1551cb3f1
 Revises: 
-Create Date: 2022-10-19 13:58:16.118825
+Create Date: 2022-10-20 14:53:32.708497
 
 """
 from alembic import op
@@ -10,7 +10,7 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision = 'f3fa5135e2d8'
+revision = '9cf1551cb3f1'
 down_revision = None
 branch_labels = None
 depends_on = None
@@ -38,15 +38,13 @@ def upgrade():
     sa.Column('password', sa.String(length=80), nullable=False),
     sa.PrimaryKeyConstraint('id'),
     sa.UniqueConstraint('email'),
-    sa.UniqueConstraint('email'),
-    sa.UniqueConstraint('username'),
     sa.UniqueConstraint('username')
     )
     op.create_table('favorites',
     sa.Column('id', sa.Integer(), nullable=False),
-    sa.Column('id_user', sa.Integer(), nullable=True),
-    sa.Column('id_planets', sa.Integer(), nullable=False),
-    sa.Column('id_characters', sa.Integer(), nullable=False),
+    sa.Column('id_user', sa.Integer(), nullable=False),
+    sa.Column('id_planets', sa.Integer(), nullable=True),
+    sa.Column('id_characters', sa.Integer(), nullable=True),
     sa.ForeignKeyConstraint(['id_characters'], ['characters.id'], ),
     sa.ForeignKeyConstraint(['id_planets'], ['planets.id'], ),
     sa.ForeignKeyConstraint(['id_user'], ['user.id'], ),

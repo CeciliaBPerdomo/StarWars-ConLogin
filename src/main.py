@@ -12,7 +12,11 @@ from models import db, User, Planets, Characters, Favorites
 #from models import Person
 import json 
 
-#Hola
+from flask_jwt_extended import create_access_token
+from flask_jwt_extended import get_jwt_identity
+from flask_jwt_extended import jwt_required
+from flask_jwt_extended import JWTManager
+
 app = Flask(__name__)
 app.url_map.strict_slashes = False
 app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DB_CONNECTION_STRING')
@@ -21,6 +25,10 @@ MIGRATE = Migrate(app, db)
 db.init_app(app)
 CORS(app)
 setup_admin(app)
+
+# Setup the Flask-JWT-Extended extension
+app.config["JWT_SECRET_KEY"] = "super-secret"  # Change this!
+jwt = JWTManager(app)
 
 # Handle/serialize errors like a JSON object
 @app.errorhandler(APIException)
@@ -115,6 +123,48 @@ def deleteUser(user_id):
     db.session.delete(userId)
     db.session.commit()
     response_body = {"msg": "Usuario borrado"}
+    return jsonify(response_body), 200
+
+# Login de usuario
+# Create a route to authenticate your users and return JWTs. The
+# create_access_token() function is used to actually generate the JWT.
+@app.route("/login", methods=["POST"])
+def login():
+    email = request.json.get("email", None)
+    password = request.json.get("password", None)
+    
+    #Controla que el usuario o pass sean las correctas
+    user = User.query.filter_by(email = email).first()
+
+    if user is None:
+        return jsonify({"msg": "El usuario no existe"}), 401
+
+    if email != user.email or password != user.password:
+        return jsonify({"msg": "Bad username or password"}), 401
+
+    access_token = create_access_token(identity=email)
+    #return jsonify(access_token=access_token)
+    response_body = {
+        "access_token": access_token,
+        "user": user.serialize()
+    }
+
+    return jsonify(response_body), 200
+
+# Protect a route with jwt_required, which will kick out requests
+# without a valid JWT present.
+@app.route("/profile", methods=["GET"])
+@jwt_required()
+def protected():
+    # Access the identity of the current user with get_jwt_identity
+    current_user = get_jwt_identity()
+
+    user = User.query.filter_by(email = current_user).first()
+
+    if user is None: 
+        return jsonify({"msg": "El usuario no existe"}), 401
+
+    response_body = {"user": user.serialize()}
     return jsonify(response_body), 200
 
 
