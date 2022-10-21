@@ -40,6 +40,7 @@ def handle_invalid_usage(error):
 def sitemap():
     return generate_sitemap(app)
 
+
 ########################
 #       Usuarios       #
 ########################
@@ -167,6 +168,23 @@ def protected():
     response_body = {"user": user.serialize()}
     return jsonify(response_body), 200
 
+#Validacion del token
+@app.route("/validation", methods=["GET"])
+@jwt_required()
+def valid_token():
+    current_user = get_jwt_identity()
+
+    user = User.query.filter_by(email = current_user).first()
+
+    if user is None: 
+        return jsonify({"status": False}), 401
+    
+    response_body = {
+        "status": True,
+        "user": user.serialize()
+    }
+
+    return jsonify(response_body), 200
 
 ########################
 #       Planetas       #
